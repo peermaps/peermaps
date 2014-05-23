@@ -7,13 +7,21 @@ var mode = 'size';
 var waiting = 4;
 var prev;
 var header;
-var offset = 0;
+
+//var start = 12694618112;
+var start = 0;
+var offset = start;
+var sizeOffset;
+var lastData;
 
 setInterval(function () {
-    console.error(offset);
+    console.error(sizeOffset);
+    //console.error(lastHeader);
+    //console.error(lastData);
+    console.error(parsers.primitiveGroup.decode(lastData.primitivegroup));
 }, 1000);
 
-fs.createReadStream('/home/substack/osm')
+fs.createReadStream('/home/substack/osm', { start: start })
     .pipe(through(write))
 ;
 
@@ -28,6 +36,7 @@ function write (buf, enc, next) {
     }
     
     if (mode === 'size') {
+        sizeOffset = offset;
         var len = buf.readUInt32BE(0);
 //console.log('SIZE', len);
         mode = 'header';
@@ -54,9 +63,11 @@ function write (buf, enc, next) {
             if (h.type === 'OSMHeader') {
                 var osmh = parsers.osmheader.decode(data);
                 //console.log('OSM HEADER', osmh);
+                lastHeader = osmh;
             }
             else if (h.type === 'OSMData') {
                 var osmd = parsers.osmdata.decode(data);
+                lastData = osmd;
                 if (osmd.lat_offset) {
                     console.log('offset=', o);
                     console.log('OSM DATA', osmd);
