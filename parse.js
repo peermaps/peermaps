@@ -2,6 +2,7 @@ var fs = require('fs');
 var zlib = require('zlib');
 var through = require('through2');
 var parsers = require('./lib/parsers.js');
+var varint = require('varint');
 
 var mode = 'size';
 var waiting = 4;
@@ -12,13 +13,13 @@ var header;
 var start = 0;
 var offset = start;
 var sizeOffset;
-var lastData;
+var lastData, lastGroup;
 
 setInterval(function () {
     console.error(sizeOffset);
-    //console.error(lastHeader);
-    //console.error(lastData);
-    console.error(parsers.primitiveGroup.decode(lastData.primitivegroup));
+    console.error(lastHeader);
+    console.error(lastDense);
+    console.error(lastGroup);
 }, 1000);
 
 fs.createReadStream('/home/substack/osm', { start: start })
@@ -68,10 +69,20 @@ function write (buf, enc, next) {
             else if (h.type === 'OSMData') {
                 var osmd = parsers.osmdata.decode(data);
                 lastData = osmd;
-                if (osmd.lat_offset) {
-                    console.log('offset=', o);
-                    console.log('OSM DATA', osmd);
-                    process.exit();
+                
+                var group = parsers.primitiveGroup.decode(osmd.primitivegroup);
+                lastGroup = group;
+                
+                if (group.dense_nodes) {
+                    var dense = parsers.dense.decode(group.dense_nodes);
+                    var xs = [];
+                    for (var i = 0; i < dense.lat.length;) {
+                        var n = varint.decode(dense.lat, i);
+                        i += varint.decode.bytesRead;
+                        xs.push(n);
+                    }
+                    console.log('xs=', xs);
+                    lastDense = dense;
                 }
             }
         });
