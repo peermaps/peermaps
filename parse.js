@@ -7,6 +7,11 @@ var mode = 'size';
 var waiting = 4;
 var prev;
 var header;
+var offset = 0;
+
+setInterval(function () {
+    console.error(offset);
+}, 1000);
 
 fs.createReadStream('/home/substack/osm')
     .pipe(through(write))
@@ -26,6 +31,7 @@ function write (buf, enc, next) {
         var len = buf.readUInt32BE(0);
 //console.log('SIZE', len);
         mode = 'header';
+        offset += waiting;
         waiting = len;
         write(buf.slice(4), enc, next);
     }
@@ -34,6 +40,7 @@ function write (buf, enc, next) {
 //console.log('HEADER', header);
         mode = 'blob';
         var nbuf = buf.slice(waiting);
+        offset += waiting;
         waiting = header.datasize;
         write(nbuf, enc, next);
     }
@@ -42,20 +49,25 @@ function write (buf, enc, next) {
 //console.log('BLOB', header.type, blob);
         
         var h = header;
+        var o = offset;
         zlib.inflate(blob.zlib_data, function (err, data) {
-            console.log(err, data, h);
             if (h.type === 'OSMHeader') {
                 var osmh = parsers.osmheader.decode(data);
-                console.log('OSM HEADER', osmh);
+                //console.log('OSM HEADER', osmh);
             }
             else if (h.type === 'OSMData') {
                 var osmd = parsers.osmdata.decode(data);
-                console.log('OSM DATA', osmd);
+                if (osmd.lat_offset) {
+                    console.log('offset=', o);
+                    console.log('OSM DATA', osmd);
+                    process.exit();
+                }
             }
         });
         
         mode = 'size';
         var nbuf = buf.slice(waiting);
+        offset += waiting;
         waiting = 4;
         write(nbuf, enc, next);
     }
