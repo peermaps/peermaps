@@ -21,9 +21,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/substack/peermap.git"
+    "url": "git://github.com/substack/peermaps.git"
   },
-  "homepage": "https://github.com/substack/peermap",
+  "homepage": "https://github.com/substack/peermaps",
   "keywords": [
     "torrent",
     "p2p",
