@@ -1,4 +1,4 @@
-# peermaps
+# peermap
 
 mad science peer to peer maps
 using bittorrent
