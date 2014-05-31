@@ -1,5 +1,5 @@
 {
-  "name": "peermap",
+  "name": "peermaps",
   "version": "1.0.0",
   "description": "peer to peer open street maps using bittorrent",
   "main": "index.js",
