@@ -1,0 +1,42 @@
+{
+  "name": "peermap",
+  "version": "1.0.0",
+  "description": "peer to peer open street maps using bittorrent",
+  "main": "index.js",
+  "dependencies": {
+    "geohasher": "~0.0.1",
+    "level": "~0.18.0",
+    "osm-pbf-parser": "~1.1.1",
+    "through2": "~0.4.1",
+    "torrent-stream": "~0.11.1",
+  },
+  "devDependencies": {
+    "tape": "~2.12.1"
+  },
+  "scripts": {
+    "test": "tape test/*.js",
+    "start": "node bin/cmd.js",
+    "build": "browserify browser/main.js -o static/bundle.js",
+    "watch": "watchify browser/main.js -o static/bundle.js -dv"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/substack/peermap.git"
+  },
+  "homepage": "https://github.com/substack/peermap",
+  "keywords": [
+    "torrent",
+    "p2p",
+    "peer",
+    "map",
+    "gis",
+    "osm",
+    "openstreetmaps"
+  ],
+  "author": {
+    "name": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net"
+  },
+  "license": "MIT"
+}
