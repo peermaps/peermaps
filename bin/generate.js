@@ -24,7 +24,7 @@ engine.once('ready', function () {
         
         if (row.type === 'nodes') {
             row.nodes.forEach(function (r) {
-                var h = geohash.encode(r.lat, r.lon);
+                var h = geohash.encode(r.lat, r.lon) + '!' + r.id;
                 db.put(h, r);
             });
         }
