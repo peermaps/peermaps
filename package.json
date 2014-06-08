@@ -6,7 +6,7 @@
   "dependencies": {
     "geohasher": "~0.0.1",
     "level": "~0.18.0",
-    "osm-pbf-parser": "~1.1.1",
+    "osm-pbf-parser": "^1.1.1",
     "through2": "~0.4.1",
     "torrent-stream": "~0.11.1"
   },
