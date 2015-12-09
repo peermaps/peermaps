@@ -4,11 +4,12 @@
   "description": "peer to peer open street maps using bittorrent",
   "main": "index.js",
   "dependencies": {
-    "geohasher": "~0.0.1",
-    "level": "~0.18.0",
-    "osm-pbf-parser": "^1.1.1",
-    "through2": "~0.4.1",
-    "torrent-stream": "~0.11.1"
+    "fd-chunk-store": "^1.1.0",
+    "geodetic-to-ecef": "^1.2.0",
+    "kdb-tree-store": "^1.0.0",
+    "level": "^1.4.0",
+    "osm-pbf-parser": "^2.2.0",
+    "through2": "~0.4.1"
   },
   "devDependencies": {
     "tape": "~2.12.1"
