@@ -11,7 +11,7 @@ var OSM = require('osm-pbf-parser')
 
 var level = require('level')
 var ndb = level('/tmp/peerdb/nodes.db', { valueEncoding: 'binary' })
-var wdb = level('/tmp/peerdb/ways.db', { valueEncoding: 'json' })
+var wdb = level('/tmp/peerdb/ways.db', { valueEncoding: 'binary' })
 
 var fdstore = require('fd-chunk-store')
 var kdbfile = '/tmp/peerdb/output.kdb'
@@ -52,22 +52,35 @@ function write (items, enc, next) {
 
   function way (item) {
     pending++
-    wdb.put(String(item.id), item.tags, function (err) {
-      if (err) console.error(err)
-      else if (--pending === 0) next()
-    })
+    var points = []
     item.refs.forEach(function (r) {
       pending++
       ndb.get(String(r), function (err, buf) {
         if (err) return console.error(err)
         var lat = buf.readFloatBE(0)
         var lon = buf.readFloatBE(4)
+        points.push(buf)
         var xyz = ecef(lat, lon, 0)
         kdb.insert(xyz, item.id, function (err) {
-          if (err) console.error(err)
-          else if (--pending === 0) next()
+          if (err) return console.error(err)
+          if (--pending === 0) next()
+          if (points.length === item.refs.length) done()
         })
       })
     })
+    function done () {
+      var s = Buffer(JSON.stringify(item.tags))
+      var slen = s.length
+      var wbuf = new Buffer(2 + slen + points.length * 2 * 4)
+      wbuf.writeUInt16BE(slen, 0)
+      s.copy(wbuf, 2)
+      for (var i = 0; i < points.length; i++) {
+        points[i].copy(wbuf, 2+slen+i*2*4)
+      }
+      wdb.put(String(item.id), wbuf, function (err) {
+        if (err) console.error(err)
+        else if (--pending === 0) next()
+      })
+    }
   }
 }
