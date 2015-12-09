@@ -27,3 +27,5 @@ kdb.queryStream(q).pipe(through.obj(function (row, enc, next) {
   })
   next()
 }))
+
+process.stdout.on('error', function () { process.exit() })
