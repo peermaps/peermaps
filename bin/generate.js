@@ -9,16 +9,15 @@ module.exports = function (osmfile, opts) {
   var osm = pipeline()
   var index = 0
 
-  var r = fs.createReadStream(osmfile, opts.header)
-  r.pipe(osm, { end: false })
-  r.once('end', function () {
-    fs.createReadStream(osmfile, opts)
+  fs.createReadStream(osmfile, opts)
       .pipe(osm)
       .pipe(through.obj(write))
-  })
 
   function write (items, enc, next) {
-    console.log(osm.offsets[index++], items.length)
+    var offset = osm.offsets[index++]
+    items.forEach(function (item, i) {
+      console.log(offset, i)
+    })
     next()
   }
 }
