@@ -1,0 +1,4 @@
+peermaps generate OSMFILE
+
+  Generate a peermaps index from a protobuf OSMFILE.
+

@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "peer to peer open street maps using bittorrent",
   "main": "index.js",
+  "bin": {
+    "peermaps": "bin/cmd.js"
+  },
   "dependencies": {
     "fd-chunk-store": "^1.1.0",
     "geodetic-to-ecef": "^1.2.0",
@@ -14,12 +17,7 @@
   "devDependencies": {
     "tape": "~2.12.1"
   },
-  "scripts": {
-    "test": "tape test/*.js",
-    "start": "node bin/cmd.js",
-    "build": "browserify browser/main.js -o static/bundle.js",
-    "watch": "watchify browser/main.js -o static/bundle.js -dv"
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git://github.com/substack/peermaps.git"

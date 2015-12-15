@@ -1,36 +1,20 @@
 #!/usr/bin/env node
 
-var fs = require('fs');
-var http = require('http');
-var ecstatic = require('ecstatic');
-var through = require('through2');
+var fs = require('fs')
+var path = require('path')
+var minimist = require('minimist')
+var argv = minimist(process.argv.slice(2), {
+  alias: { h: 'help' }
+})
 
-var file = __dirname + '/../data/planet-140528.osm.pbf.torrent';
-var torrentFile = fs.readFileSync(file);
+if (argv.help || argv._[0] === 'help') {
+  usage(0)
+} else if (argv._[0] === 'generate' && argv._.length >= 2) {
+  require('./generate.js')(argv._[1], argv)
+} else usage(1)
 
-var parseOSM = require('osm-pbf-parser');
-
-var torrentStream = require('torrent-stream');
-var engine = torrentStream(torrentFile);
-
-var ready = false;
-engine.once('ready', function () { ready = true });
-
-var st = ecstatic(__dirname + '/../static');
-var server = http.createServer(function (req, res) {
-    st(req, res);
-});
-server.listen(5000);
-
-var shoe = require('shoe');
-var sock = shoe(function onready (stream) {
-    if (!ready) return engine.once('ready', onready);
-    
-    var rs = engine.files[0].createReadStream();
-    var topts = { highWaterMark: 16 };
-    rs.pipe(parseOSM()).pipe(through.obj(topts, function (row, enc, next) {
-        this.push(JSON.stringify(row) + '\n');
-        setTimeout(next, 100);
-    })).pipe(stream);
-});
-sock.install(server, '/sock');
+function usage (code) {
+  var r = fs.createReadStream(path.join(__dirname, 'usage.txt'))
+  r.pipe(process.stdout)
+  if (code) r.once('end', function () { process.exit(code) })
+}
