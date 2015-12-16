@@ -17,7 +17,6 @@ module.exports = function (osmfile, opts) {
   mkdirp(workdir, function (err) {
     var osm = pipeline()
     var index = 0
-    var pending = 0
     var limit = 200 * 1000
 
     /*
@@ -29,7 +28,6 @@ module.exports = function (osmfile, opts) {
     })
     */
     var db = level(path.join(workdir, 'db'))
-    var queue = []
 
     fs.createReadStream(osmfile, opts)
       .pipe(osm)
@@ -37,7 +35,19 @@ module.exports = function (osmfile, opts) {
 
     function write (items, enc, next) {
       var offset = osm.offsets[index++]
-      var ops = items.map(function (item, i) {
+
+      ;(function store (offset) {
+        if (offset >= items.length) return next()
+        var ops = items.slice(offset, offset+limit)
+          .map(map).filter(Boolean)
+        if (ops.length === 0) return store(offset+limit)
+        db.batch(ops, function (err) {
+          if (err) console.error(err)
+          store(offset+limit)
+        })
+      })(0)
+
+      function map (item) {
         if (item.type === 'node') {
           var xyz = ecef(item.lat, item.lon, 0)
           var buf = new Buffer(12)
@@ -49,23 +59,8 @@ module.exports = function (osmfile, opts) {
             key: String(item.id),
             value: buf
           }
-          //console.log(item.id, offset)
-          //console.log(offset, i, xyz)
         }
-      }).filter(Boolean)
-      if (ops.length === 0) return next()
-
-      pending += ops.length
-      console.log(pending)
-
-      db.batch(ops, function (err) {
-        if (err) console.error(err)
-        pending -= ops.length
-        console.log(pending)
-        if (queue.length && pending <= limit) queue.shift()()
-      })
-      if (pending < limit) next()
-      else queue.push(next)
+      }
     }
   })
 }
