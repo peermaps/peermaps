@@ -17,6 +17,9 @@ module.exports = function (osmfile, opts) {
   mkdirp(workdir, function (err) {
     var osm = pipeline()
     var index = 0
+    var pending = 0
+    var limit = 200 * 1000
+
     /*
     var kdbfile = path.join(workdir, 'kdb')
     var kdb = kdbtree({
@@ -26,6 +29,7 @@ module.exports = function (osmfile, opts) {
     })
     */
     var db = level(path.join(workdir, 'db'))
+    var queue = []
 
     fs.createReadStream(osmfile, opts)
       .pipe(osm)
@@ -49,10 +53,19 @@ module.exports = function (osmfile, opts) {
           //console.log(offset, i, xyz)
         }
       }).filter(Boolean)
+      if (ops.length === 0) return next()
+
+      pending += ops.length
+      console.log(pending)
+
       db.batch(ops, function (err) {
         if (err) console.error(err)
+        pending -= ops.length
+        console.log(pending)
+        if (queue.length && pending <= limit) queue.shift()()
       })
-      next()
+      if (pending < limit) next()
+      else queue.push(next)
     }
   })
 }
