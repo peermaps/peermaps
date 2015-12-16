@@ -9,7 +9,7 @@
   "dependencies": {
     "fd-chunk-store": "^1.1.0",
     "geodetic-to-ecef": "^1.2.0",
-    "kdb-tree-store": "^1.0.0",
+    "kdb-tree-store": "^2.0.0",
     "level": "^1.4.0",
     "osm-pbf-parser": "^2.2.0",
     "stream-combiner2": "^1.1.1",
