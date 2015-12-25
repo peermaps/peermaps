@@ -8,31 +8,35 @@ module.exports = function (kdbfile, pt, opts) {
     store: fdstore(4096, kdbfile)
   })
   var seen = {}
-  kdb.query(pt, function f (err, res) {
-    if (err) return console.error(err)
-    if (res.length !== 1) return console.error('more than one point')
-    console.log(res[0].point)
-    seen[res[0].point.join(',')] = true
-    var buf = res[0].value
-    var prev = [
-      buf.readFloatBE(0),
-      buf.readFloatBE(4),
-      buf.readFloatBE(8)
-    ]
-    var next = [
-      buf.readFloatBE(12),
-      buf.readFloatBE(16),
-      buf.readFloatBE(20)
-    ]
-    var pkey = prev.join(',')
-    var nkey = next.join(',')
-    if (!seen[pkey]) {
-      seen[pkey] = true
-      kdb.query(prev, f)
-    }
-    if (!seen[nkey]) {
-      seen[nkey] = true
-      kdb.query(next, f)
-    }
+  kdb.query(pt, function (err, res) {
+    ;(function next () {
+      if (res.length === 0) return
+      var r = res.shift(), v = r.value
+      var wayId = v.readUInt32BE(0)
+      console.log(wayId)
+      console.log('  ' + r.point.join(' '))
+      seen[wayId] = {}
+      seen[wayId][r.point.join(',')] = true
+      var pt = [ v.readFloatBE(4), v.readFloatBE(8), v.readFloatBE(12) ]
+      showPts(wayId, pt, next)
+    })()
   })
+
+  function showPts (wayId, pt, cb) {
+    kdb.query(pt, onpts)
+    function onpts (err, pts) {
+      if (err) return console.error(err)
+      var xpts = pts
+        .filter(function (p) { return p.readUInt32BE(0) === wayId })
+        .map(function (p) {
+          return [ p.readFloatBE(4), p.readFloatBE(8), p.readFloatBE(12) ]
+        })
+        .filter(function (p) { return !seen[p.join(',')] })
+
+      if (xpts.length === 0) return cb()
+      console.log('  ' + xpts[0].join(' '))
+      seen[wayId][xpts[0].join(',')] = true
+      kdb.query(xpts[0], onpts)
+    }
+  }
 }

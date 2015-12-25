@@ -25,7 +25,7 @@ module.exports = function (osmfile, opts) {
     var limit = 200 * 1000
     var kdbfile = path.join(workdir, 'kdb')
     var kdb = kdbtree({
-      types: [ 'float32', 'float32', 'float32', 'buffer[24]' ],
+      types: [ 'float32', 'float32', 'float32', 'buffer[28]' ],
       size: 4096,
       store: fdstore(4096, kdbfile)
     })
@@ -74,16 +74,17 @@ module.exports = function (osmfile, opts) {
               if (--xpending === 0) done()
             })
             function done () {
-              var buf = new Buffer(24)
+              var buf = new Buffer(28)
               var ne = ecef(results.next[0], results.next[1])
               var pe = ecef(results.prev[0], results.prev[1])
               var ce = ecef(results.current[0], results.current[1])
-              buf.writeFloatBE(pe[0], 0)
-              buf.writeFloatBE(pe[1], 4)
-              buf.writeFloatBE(pe[2], 8)
-              buf.writeFloatBE(ne[0], 12)
-              buf.writeFloatBE(ne[1], 16)
-              buf.writeFloatBE(ne[2], 20)
+              buf.writeUInt32BE(item.id, 0)
+              buf.writeFloatBE(pe[0], 4)
+              buf.writeFloatBE(pe[1], 8)
+              buf.writeFloatBE(pe[2], 12)
+              buf.writeFloatBE(ne[0], 16)
+              buf.writeFloatBE(ne[1], 20)
+              buf.writeFloatBE(ne[2], 24)
               kdb.insert(ce, buf, function (err) {
                 if (err) console.error(err)
               })
