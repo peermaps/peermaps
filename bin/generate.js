@@ -10,19 +10,17 @@ var kdbtree = require('kdb-tree-store')
 var fdstore = require('fd-chunk-store')
 var level = require('level')
 
-var NODES = 1, WAYS = 2, RELATIONS = 3
-
 module.exports = function (osmfile, opts) {
   var workdir = opts.workdir || '/tmp/peermaps-workdir-' + Math.random()
   console.log(workdir)
 
   mkdirp(workdir, function (err) {
     if (err) console.error(err)
-    process(workdir)
+    work(workdir)
   })
 
-  function process (workdir) {
-    var db = level(path.join(workdir, 'db'), { valueEncoding: 'binary' })
+  function work (workdir) {
+    var db = level(path.join(workdir, 'db'))
     var osm = OSM()
     var limit = 200 * 1000
     var kdbfile = path.join(workdir, 'kdb')
@@ -31,92 +29,69 @@ module.exports = function (osmfile, opts) {
       size: 4096,
       store: fdstore(4096, kdbfile)
     })
-    var mode = NODES
 
     fs.createReadStream(osmfile, opts)
       .pipe(osm)
-      .pipe(through.obj(write))
+      .pipe(through.obj(writeWay))
 
-    function write (items, enc, next) {
-      if (mode === WAYS) return writeWay(items, enc, next)
-      if (mode === RELATIONS) return next()
-
-      ;(function store (offset) {
-        if (offset >= items.length) return next()
-
-        var ops = []
-        for (var i = offset; i < items.length && ops.length < limit; i++) {
-          if (items[i].type === 'node') {
-            ops.push(nodeRecord(items[i]))
-          } else if (items[i].type === 'way') {
-            mode = WAYS
-            return writeWay(i === 0 ? items : items.slice(i), enc, next)
-          }
-        }
-        if (ops.length) db.batch(ops, function (err) {
-          if (err) console.error(err)
-          store(offset+limit)
-        })
-      })(0)
-    }
     function writeWay (items, enc, next) {
-      var pending = 0
-      items.forEach(function (item) {
-        if (mode === RELATIONS) return
-        if (item.type === 'relation') {
-          mode = RELATIONS
-          // todo: relations
-          return
-        }
-        if (item.type !== 'way') {
-          return next(new Error('unexpected non-way type'))
-        }
-
-        pending++
-        var nodes = [], bufs = []
-        var ipending = item.refs.length
-        item.refs.forEach(function (ref, ix) {
-          db.get(String(ref), function (err, buf) {
-            if (err) console.error(err)
-            var xyz = [
-              buf.readFloatBE(0),
-              buf.readFloatBE(4),
-              buf.readFloatBE(8)
-            ]
-            nodes[ix] = xyz
-            bufs[ix] = buf
-            if (--ipending === 0) done()
-          })
-        })
-
-        function done () {
-          nodes.forEach(function (node, i) {
-            // key: [current xyz]
-            // value: [prev xyz] [next xyz]
-            var value = new Buffer(24)
-            bufs[(i+nodes.length-1)%nodes.length].copy(value)
-            bufs[(i+1)%nodes.length].copy(value, 12)
-            kdb.insert(node, value, function (err) {
-              if (err) console.error(err)
-              if (--pending === 0) next()
+      if (items[0].type === 'node') {
+        ;(function advance (err) {
+          if (err) return next(err)
+          if (items.length === 0) return next()
+          var xitems = items.splice(0, 100)
+          db.batch(xitems.map(function (item) {
+            return {
+              type: 'put',
+              key:'n!' + item.id,
+              value: item.lat + ',' + item.lon
+            }
+          }), advance)
+        })()
+      } else if (items[0].type === 'way') {
+        ;(function advance (err) {
+          if (err) return next(err)
+          if (items.length === 0) return next()
+          var item = items.shift()
+          var len = item.refs.length
+          var pending = 0
+          item.refs.forEach(function (ref, i) {
+            var n = item.refs[(i+1)%len]
+            var p = item.refs[(i-1+len)%len]
+            pending++
+            var xpending = 3
+            var results = {}
+            db.get('n!' + n, function (err, value) {
+              results.next = value.split(',')
+              if (--xpending === 0) done()
             })
+            db.get('n!' + p, function (err, value) {
+              results.prev = value.split(',')
+              if (--xpending === 0) done()
+            })
+            db.get('n!' + ref, function (err, value) {
+              results.current = value.split(',')
+              if (--xpending === 0) done()
+            })
+            function done () {
+              var buf = new Buffer(24)
+              var ne = ecef(results.next[0], results.next[1])
+              var pe = ecef(results.prev[0], results.prev[1])
+              var ce = ecef(results.current[0], results.current[1])
+              buf.writeFloatBE(pe[0], 0)
+              buf.writeFloatBE(pe[1], 4)
+              buf.writeFloatBE(pe[2], 8)
+              buf.writeFloatBE(ne[0], 12)
+              buf.writeFloatBE(ne[1], 16)
+              buf.writeFloatBE(ne[2], 20)
+              kdb.insert(ce, buf, function (err) {
+                if (err) console.error(err)
+              })
+              if (--pending === 0) advance()
+            }
           })
-        }
-      })
-      if (pending === 0) next()
+        })()
+      } else next()
     }
-  }
-}
-
-function nodeRecord (item) {
-  var xyz = ecef(item.lat, item.lon, 0)
-  var buf = new Buffer(12)
-  buf.writeFloatBE(xyz[0], 0)
-  buf.writeFloatBE(xyz[1], 4)
-  buf.writeFloatBE(xyz[2], 8)
-  return {
-    type: 'put',
-    key: String(item.id),
-    value: buf
   }
 }
