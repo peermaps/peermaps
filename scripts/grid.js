@@ -1,5 +1,4 @@
 var PI = Math.PI
-var cos = Math.cos, acos = Math.acos
 var sin = Math.sin, asin = Math.asin
 
 module.exports = function compute (opts) {
