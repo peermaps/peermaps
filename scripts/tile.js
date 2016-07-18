@@ -33,9 +33,13 @@ module.exports = function (opts, cb) {
     offsets.push([i,j])
   }
 
+  var pending = 1 + offsets.length, files = []
   offsets.forEach(function (range) {
     (function next (i, j) {
-      if (i >= j) return
+      if (i >= j) {
+        if (--pending === 0) cb(null, files)
+        return
+      }
       var g = grid[i]
       var wsen = [ g.xmin, g.ymin, g.xmax, g.ymax ]
       var cmd = [
@@ -52,6 +56,7 @@ module.exports = function (opts, cb) {
       ps.osmconvert.stderr.pipe(process.stderr)
 
       var outfile = path.join(opts.outdir, i + '.o5m.gz')
+      files.push(outfile)
       ps.osmconvert.stdout.pipe(ps.gzip.stdin)
       ps.gzip.stdout.pipe(fs.createWriteStream(outfile))
 
@@ -64,10 +69,11 @@ module.exports = function (opts, cb) {
       })
     })(range[0], range[1])
   })
+  if (--pending === 0) cb(null, files)
 }
 
 function gzip () {
   var ps = spawn('gzip')
-  ps.gzip.stderr.pipe(process.stderr)
+  ps.stderr.pipe(process.stderr)
   return ps
 }

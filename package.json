@@ -13,7 +13,8 @@
     "level": "^1.4.0",
     "osm-pbf-parser": "^2.2.0",
     "stream-combiner2": "^1.1.1",
-    "through2": "~0.4.1"
+    "through2": "~0.4.1",
+    "xtend": "^4.0.1"
   },
   "devDependencies": {
     "tape": "~2.12.1"
