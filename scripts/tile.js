@@ -3,9 +3,14 @@
 var path = require('path')
 var spawn = require('child_process').spawn
 var fs = require('fs')
+var once = require('once')
+var xtend = require('xtend')
+var Grid = require('./grid.js')
 
 module.exports = function (opts, cb) {
-  var grid = require('./grid.js')({
+  cb = once(cb || noop)
+  var cancel = false
+  var grid = Grid({
     xcount: opts.xcount,
     ycount: opts.ycount,
     xmin: opts.xmin,
@@ -20,8 +25,8 @@ module.exports = function (opts, cb) {
   var metastr = JSON.stringify(meta)
   fs.writeFile(path.join(opts.outdir, 'meta.json'), metastr, function (err) {
     if (err) {
-      console.error(err)
-      process.exit(1)
+      cancel = true
+      return cb(err)
     }
   })
 
@@ -35,7 +40,9 @@ module.exports = function (opts, cb) {
 
   var pending = 1 + offsets.length, files = []
   offsets.forEach(function (range) {
+    if (cancel) return
     (function next (i, j) {
+      if (cancel) return
       if (i >= j) {
         if (--pending === 0) cb(null, files)
         return
@@ -48,32 +55,38 @@ module.exports = function (opts, cb) {
         '-b=' + wsen.join(','),
         '--out-o5m'
       ]
-      console.log(cmd.join(' '))
+      if (opts.info) console.error(cmd.join(' '))
       var ps = {
         osmconvert: spawn(cmd[0], cmd.slice(1)),
         gzip: gzip()
       }
-      ps.osmconvert.stderr.pipe(process.stderr)
+      if (opts.info) ps.osmconvert.stderr.pipe(process.stderr)
 
       var outfile = path.join(opts.outdir, i + '.o5m.gz')
-      files.push(outfile)
+      files.push(xtend(g, { file: outfile, i: i }))
       ps.osmconvert.stdout.pipe(ps.gzip.stdin)
       ps.gzip.stdout.pipe(fs.createWriteStream(outfile))
 
       ps.osmconvert.once('close', function (code) {
-        if (code !== 0) process.exit(code)
+        if (code !== 0) {
+          cancel = true
+          cb(new Error('non-zero exit code from osmconvert'))
+        }
       })
       ps.gzip.once('close', function (code) {
-        if (code !== 0) process.exit(code)
-        else next(i+1, j)
+        if (code !== 0) {
+          cancel = true
+          cb(new Error('non-zero exit code from gzip'))
+        } else next(i+1, j)
       })
     })(range[0], range[1])
   })
   if (--pending === 0) cb(null, files)
-}
 
-function gzip () {
-  var ps = spawn('gzip')
-  ps.stderr.pipe(process.stderr)
-  return ps
+  function gzip () {
+    var ps = spawn('gzip')
+    if (opts.info) ps.stderr.pipe(process.stderr)
+    return ps
+  }
 }
+function noop () {}
