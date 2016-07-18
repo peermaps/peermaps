@@ -8,8 +8,8 @@ var createTiles = require('./tile.js')
 var minimist = require('minimist')
 var argv = minimist(process.argv.slice(2), {
   alias: { i: 'infile', o: 'outdir', t: 'threshold' },
-  boolean: [ 'info', 'remove' ],
-  default: { info: true, remove: false }
+  boolean: [ 'info' ],
+  default: { info: true, remove: false, depth: 0 }
 })
 compute(argv, function (err) {
   if (err) return error(err)
@@ -18,7 +18,8 @@ compute(argv, function (err) {
 function compute (opts, cb) {
   createTiles(opts, function (err, files) {
     if (err) cb(err)
-    else if (opts.remove === true) {
+    else if (opts.remove === true
+    || (opts.remove && opts.depth >= opts.remove)) {
       fs.unlink(opts.infile, function (err) {
         if (err) cb(err)
         else onfiles(files)
@@ -48,6 +49,7 @@ function compute (opts, cb) {
         fs.mkdir(dir, function (err) {
           if (err) return cb(err)
           compute(xtend(xtend(opts, file), {
+            depth: opts.depth + 1,
             outdir: dir,
             infile: file.file
           }), next)
