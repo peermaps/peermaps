@@ -31,8 +31,9 @@ if (argv.help || argv._[0] === 'help') {
   var wsen = argv._[1].split(',').map(Number)
   var nprocs = 4
   peermaps.files(wsen, function (err, files) {
-    files = files.map(function (x) { return path.join(dir,x.file) })
-    spawn('osmconvert', files, { stdio: 'inherit' })
+    var oargs = files.map(function (x) { return path.join(dir,x.file) })
+      .concat('-b=' + wsen.join(','))
+    spawn('osmconvert', oargs, { stdio: 'inherit' })
   })
 } else if (argv._[0] === 'files') {
   var wsen = argv._[1].split(',').map(Number)
