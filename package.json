@@ -7,11 +7,13 @@
     "peermaps": "bin/cmd.js"
   },
   "dependencies": {
+    "bounding-box-overlap-test": "^1.0.0",
     "fd-chunk-store": "^1.1.0",
+    "from2": "^2.3.0",
     "geodetic-to-ecef": "^1.2.0",
     "kdb-tree-store": "^2.0.0",
     "level": "^1.4.0",
-    "once": "^1.3.3",
+    "once": "^1.4.0",
     "osm-pbf-parser": "^2.2.0",
     "stream-combiner2": "^1.1.1",
     "through2": "~0.4.1",

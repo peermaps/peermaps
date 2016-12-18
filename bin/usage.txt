@@ -1,4 +1,36 @@
-peermaps generate OSMFILE
+peermaps data W,S,E,N {OPTIONS}
 
-  Generate a peermaps index from a protobuf OSMFILE.
+  Print all data inside the W,S,E,N extents.
+
+  -f  Output format: osm (xml), o5m, pbf, csv.
+  -s  Comma-separated list of source IDs to query.
+
+peermaps files W,S,E,N
+
+  Show the files in the archive that overlap with the W,S,E,N extents.
+
+peermaps generate INFILE {OPTIONS}
+
+  -o OUTDIR   Default: ./mapdata
+  -s MAXSIZE  Files must be no greater than MAXSIZE. Default: 1M
+
+  Generate a peermaps archive at OUTDIR for INFILE.
+
+  Example:
+    peermaps generate planet-latest.osm.pbf -o ~/data/planet -s 5M
+
+  Note: this operation may take days for planet-sized inputs.
+
+peermaps seed ARCHIVEDIR {OPTIONS}
+
+  Seed ARCHIVEDIR, an output directory created with `peermaps generate`.
+  Prints a source ID.
+
+  -n --networks  Comma-separated list of networks: ipfs, dat.
+
+peermaps sources list
+peermaps sources add ID
+peermaps sources rm ID
+
+peermaps daemon
 
