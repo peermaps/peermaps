@@ -10,6 +10,7 @@ var argv = minimist(args.concat('--',bare), {
   alias: { h: 'help' }
 })
 
+var spawn = require('child_process').spawn
 var through = require('through2')
 var fs = require('fs')
 var path = require('path')
@@ -28,6 +29,11 @@ if (argv.help || argv._[0] === 'help') {
   usage(0)
 } else if (argv._[0] === 'data') {
   var wsen = argv._[1].split(',').map(Number)
+  var nprocs = 4
+  peermaps.files(wsen, function (err, files) {
+    files = files.map(function (x) { return path.join(dir,x.file) })
+    spawn('osmconvert', files, { stdio: 'inherit' })
+  })
 } else if (argv._[0] === 'files') {
   var wsen = argv._[1].split(',').map(Number)
   peermaps.files(wsen).pipe(through.obj(function (row, enc, next) {
@@ -39,4 +45,9 @@ function usage (code) {
   var r = fs.createReadStream(path.join(__dirname, 'usage.txt'))
   r.pipe(process.stdout)
   if (code) r.once('end', function () { process.exit(code) })
+}
+
+function error (err) {
+  console.error(err)
+  process.exit(1)
 }

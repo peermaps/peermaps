@@ -1,5 +1,6 @@
 var from = require('from2')
 var concat = require('concat-stream')
+var collect = require('collect-stream')
 var once = require('once')
 var path = require('path')
 var overlap = require('./lib/overlap.js')
@@ -11,10 +12,13 @@ function Peermaps (reader) {
   this._reader = reader
 }
 
-Peermaps.prototype.files = function (wsen) {
+Peermaps.prototype.files = function (wsen, cb) {
   var r = this._reader
   var outqueue = [], dirqueue = ['']
-  return from.obj(function read (size, next) {
+  var stream = from.obj(read)
+  if (cb) collect(stream, cb)
+  return stream
+  function read (size, next) {
     if (outqueue.length > 0) return next(null, { file: outqueue.shift() })
     else if (dirqueue.length === 0) return next(null, null)
     next = once(next)
@@ -46,7 +50,7 @@ Peermaps.prototype.files = function (wsen) {
       })
       read(size, next)
     }
-  })
+  }
 }
 
 function json (r, file, cb) {
