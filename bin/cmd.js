@@ -3,7 +3,7 @@
 var minimist = require('minimist')
 var args = [], bare = []
 for (var i = 2; i < process.argv.length; i++) {
-  if (/^-\d/.test(process.argv[i])) bare.push(process.argv[i])
+  if (/^-?\d/.test(process.argv[i])) bare.push(process.argv[i])
   else args.push(process.argv[i])
 }
 var argv = minimist(args.concat('--',bare), {
@@ -28,15 +28,19 @@ process.stdout.on('error', function () {})
 if (argv.help || argv._[0] === 'help') {
   usage(0)
 } else if (argv._[0] === 'data') {
-  var wsen = argv._[1].split(',').map(Number)
-  var nprocs = 4
+  var wsen = argv._.slice(1).join(',').split(',').map(Number)
+  peermaps.data(wsen).pipe(through.obj(function (row, enc, next) {
+    next(null, JSON.stringify(row) + '\n')
+  })).pipe(process.stdout)
+  /*
   peermaps.files(wsen, function (err, files) {
     var oargs = files.map(function (x) { return path.join(dir,x.file) })
       .concat('-b=' + wsen.join(','))
     spawn('osmconvert', oargs, { stdio: 'inherit' })
   })
+  */
 } else if (argv._[0] === 'files') {
-  var wsen = argv._[1].split(',').map(Number)
+  var wsen = argv._.slice(1).join(',').split(',').map(Number)
   peermaps.files(wsen).pipe(through.obj(function (row, enc, next) {
     next(null, row.file + '\n')
   })).pipe(process.stdout)
