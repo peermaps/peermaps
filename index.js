@@ -32,7 +32,7 @@ Peermaps.prototype.data = function (wsen) {
     if (streaming < 100) {
       streaming++
       var s = pumpify.obj(
-        self._reader.createReadStream(row.file),
+        self._reader.createReadStream(row),
         gunzip(),
         o5mdecode()
       )
@@ -56,33 +56,37 @@ Peermaps.prototype.files = function (wsen, cb) {
   if (cb) collect(stream, cb)
   return stream
   function read (size, next) {
-    if (outqueue.length > 0) return next(null, { file: outqueue.shift() })
+    if (outqueue.length > 0) return next(null, outqueue.shift())
     else if (dirqueue.length === 0) return next(null, null)
     next = once(next)
-    var pending = 2, files = null, meta = null
     var dir = dirqueue.shift()
-    r.list(dir, function (err, x) {
+    r.list(dir, function (err, files) {
       if (err) return next(err)
-      files = x
-      if (--pending === 0) done()
+      var metafile = null
+      for (var i = 0; i < files.length; i++) {
+        if (files[i].name === 'meta.json') {
+          metafile = files[i]
+          break
+        }
+      }
+      if (!metafile) return cb(new Error('meta.json not found'))
+      json(r, metafile, function (err, meta) {
+        if (err) return next(err)
+        done(files, meta)
+      })
     })
-    json(r, path.join(dir,'meta.json'), function (err, x) {
-      if (err) return next(err)
-      meta = x
-      if (--pending === 0) done()
-    })
-    function done () {
+    function done (files, meta) {
       var matches = {}
       Object.keys(meta).forEach(function (m) {
         if (overlap(meta[m], wsen)) matches[m] = true
       })
       files.forEach(function (file) {
-        var m = /^(\d+)(?:\.o5m\.gz)?$/.exec(file)
+        var m = /^(\d+)(?:\.o5m\.gz)?$/.exec(file.name)
         if (!m || !matches[m[1]]) return
-        if (/\.o5m\.gz$/.test(file)) {
-          outqueue.push(path.join(dir,file))
+        if (/\.o5m\.gz$/.test(file.name)) {
+          outqueue.push(Object.assign({}, file, { name: path.join(dir,file.name) }))
         } else {
-          dirqueue.push(path.join(dir,file))
+          dirqueue.push(path.join(dir,file.name))
         }
       })
       read(size, next)

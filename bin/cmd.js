@@ -12,17 +12,16 @@ var argv = minimist(args.concat('--',bare), {
 
 var spawn = require('child_process').spawn
 var through = require('through2')
+
 var fs = require('fs')
 var path = require('path')
-var dir = '/home/substack/data/osmtiles'
-var peermaps = require('../')({
-  list: function (p, cb) {
-    fs.readdir(path.join(dir,p), cb)
-  },
-  createReadStream: function (file) {
-    return fs.createReadStream(path.join(dir,file))
-  }
-})
+var ospath = require('ospath')
+var mkdirp = require('mkdirp')
+
+//var dir = path.join(ospath.data(),'peermaps/dat')
+//var peermaps = require('../')(require('../lib/dat.js')(dir))
+var peermaps = require('../')(require('../lib/ipfs.js')())
+
 process.stdout.on('error', function () {})
 
 if (argv.help || argv._[0] === 'help') {
@@ -42,7 +41,7 @@ if (argv.help || argv._[0] === 'help') {
 } else if (argv._[0] === 'files') {
   var wsen = argv._.slice(1).join(',').split(',').map(Number)
   peermaps.files(wsen).pipe(through.obj(function (row, enc, next) {
-    next(null, row.file + '\n')
+    next(null, row.name + '\n')
   })).pipe(process.stdout)
 } else usage(1)
 
