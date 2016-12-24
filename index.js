@@ -9,7 +9,7 @@ var overlap = require('./lib/overlap.js')
 var gunzip = require('zlib').createGunzip
 var o5mdecode = require('o5m-decode')
 var merge = require('merge-stream')
-//var onend = require('end-of-stream')
+var readonly = require('read-only-stream')
 
 module.exports = Peermaps
 
@@ -27,16 +27,15 @@ Peermaps.prototype.data = function (wsen) {
   r.on('error', function (err) { stream.emit('error', err) })
   var stopper = through.obj()
   var mstream = merge(stopper)
-  return mstream
+  return readonly(mstream.pipe(self._decode.wrap(wsen)))
 
   function write (row, enc, next) {
     if (streaming < 4) {
       streaming++
       var s = pumpify.obj(
         self._network.createReadStream(row),
-        self._decode(wsen)
+        self._decode.stream(wsen)
       )
-      //onend(s,end)
       s.once('end', end)
       mstream.add(s)
       next()
