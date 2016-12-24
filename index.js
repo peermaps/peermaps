@@ -13,9 +13,10 @@ var onend = require('end-of-stream')
 
 module.exports = Peermaps
 
-function Peermaps (reader) {
-  if (!(this instanceof Peermaps)) return new Peermaps(reader)
-  this._reader = reader
+function Peermaps (opts) {
+  if (!(this instanceof Peermaps)) return new Peermaps(opts)
+  this._reader = opts.reader
+  this._decoder = opts.decoder
 }
 
 Peermaps.prototype.data = function (wsen) {
@@ -33,8 +34,7 @@ Peermaps.prototype.data = function (wsen) {
       streaming++
       var s = pumpify.obj(
         self._reader.createReadStream(row),
-        gunzip(),
-        o5mdecode()
+        self._decoder(wsen)
       )
       onend(s, end)
       mstream.add(s)

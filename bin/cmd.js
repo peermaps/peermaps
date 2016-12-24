@@ -20,7 +20,10 @@ var mkdirp = require('mkdirp')
 
 //var dir = path.join(ospath.data(),'peermaps/dat')
 //var peermaps = require('../')(require('../lib/dat.js')(dir))
-var peermaps = require('../')(require('../lib/ipfs.js')())
+var peermaps = require('../')({
+  reader: require('../lib/ipfs.js')(),
+  decoder: require('../decoder/js')(argv)
+})
 
 process.stdout.on('error', function () {})
 
@@ -28,9 +31,7 @@ if (argv.help || argv._[0] === 'help') {
   usage(0)
 } else if (argv._[0] === 'data') {
   var wsen = argv._.slice(1).join(',').split(',').map(Number)
-  peermaps.data(wsen).pipe(through.obj(function (row, enc, next) {
-    next(null, JSON.stringify(row) + '\n')
-  })).pipe(process.stdout)
+  peermaps.data(wsen).pipe(process.stdout)
   /*
   peermaps.files(wsen, function (err, files) {
     var oargs = files.map(function (x) { return path.join(dir,x.file) })
