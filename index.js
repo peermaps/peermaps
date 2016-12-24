@@ -15,8 +15,8 @@ module.exports = Peermaps
 
 function Peermaps (opts) {
   if (!(this instanceof Peermaps)) return new Peermaps(opts)
-  this._reader = opts.reader
-  this._decoder = opts.decoder
+  this._network = opts.network
+  this._decode = opts.decode
 }
 
 Peermaps.prototype.data = function (wsen) {
@@ -33,8 +33,8 @@ Peermaps.prototype.data = function (wsen) {
     if (streaming < 4) {
       streaming++
       var s = pumpify.obj(
-        self._reader.createReadStream(row),
-        self._decoder(wsen)
+        self._network.createReadStream(row),
+        self._decode(wsen)
       )
       //onend(s,end)
       s.once('end', end)
@@ -51,7 +51,7 @@ Peermaps.prototype.data = function (wsen) {
 }
 
 Peermaps.prototype.files = function (wsen, cb) {
-  var r = this._reader
+  var r = this._network
   var outqueue = [], dirqueue = ['']
   var stream = from.obj(read)
   if (cb) collect(stream, cb)
