@@ -15,7 +15,46 @@ module.exports = function (opts) {
       return pumpify(gunzip(), o5mdecode(), filter(), ndjson())
     }
     function filter () {
-      return through.obj() // TODO
+      var inside = {}, outside = {}
+      return through.obj(write)
+      function write (row, enc, next) {
+        if (row.type === 'node') {
+          var lon = row.longitude, lat = row.latitude
+          var isin = lon >= wsen[0] && lon <= wsen[2]
+            && lat >= wsen[1] && lat <= wsen[3]
+          if (isin) {
+            inside[row.id] = true
+            next(null, row)
+          } else {
+            outside[row.id] = row
+            next(null)
+          }
+        } else if (row.type === 'way') {
+          for (var i = 0; i < row.refs.length; i++) {
+            if (inside[row.refs[i]]) {
+              inside[row.id] = true
+              for (var j = 0; j < row.refs.length; j++) {
+                var r = row.refs[j]
+                if (outside[r]) {
+                  inside[r] = true
+                  this.push(outside[r])
+                  outside[r] = null
+                }
+              }
+              return next(null, row)
+            }
+          }
+          next()
+        } else if (row.type === 'relation') {
+          for (var i = 0; i < row.members.length; i++) {
+            if (inside[row.members[i].id]) {
+              inside[row.id] = true
+              return next(null, row)
+            }
+          }
+          next()
+        } else next()
+      }
     }
   }
 }
