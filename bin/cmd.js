@@ -23,6 +23,7 @@ var mkdirp = require('mkdirp')
 var peermaps = require('../')({
   reader: require('../lib/ipfs.js')(),
   decoder: require('../decoder/js')(argv)
+  //decoder: require('../decoder/osmconvert')(argv)
 })
 
 process.stdout.on('error', function () {})
