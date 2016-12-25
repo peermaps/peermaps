@@ -29,9 +29,10 @@ $ peermaps data -155.064270 18.9136925 -154.8093872 19.9 | head
 
 requirements:
 
-* [ipfs](https://dist.ipfs.io/) (v0.4.5 or later)
+* [ipfs](https://dist.ipfs.io/)
 * [nodejs + npm](https://nodejs.org)
 * [osmconvert](https://wiki.openstreetmap.org/wiki/Osmconvert#Download)
+* bash (for the `peermaps data` command)
 
 Install the prerequisites, then install the `peermaps` command:
 

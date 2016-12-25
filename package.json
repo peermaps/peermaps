@@ -1,7 +1,7 @@
 {
   "name": "peermaps",
   "version": "1.0.0",
-  "description": "peer to peer open street maps using bittorrent",
+  "description": "peer to peer cartography",
   "main": "index.js",
   "bin": {
     "peermaps": "bin/cmd.js"
