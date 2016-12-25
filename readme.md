@@ -29,7 +29,7 @@ $ peermaps data -155.064270 18.9136925 -154.8093872 19.9 | head
 
 requirements:
 
-* [ipfs](https://dist.ipfs.io/)
+* [ipfs](https://dist.ipfs.io/#go-ipfs)
 * [nodejs + npm](https://nodejs.org)
 * [osmconvert](https://wiki.openstreetmap.org/wiki/Osmconvert#Download)
 * bash (for the `peermaps data` command)
@@ -117,3 +117,4 @@ archives and an update mechanism.
 * archive update mechanism
 * torrent/webtorrent support?
 * p2p web tile viewer
+* make the generate step much faster by patching osmconvert.c
