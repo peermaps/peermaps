@@ -7,6 +7,9 @@ module.exports = function (dir) {
     },
     createReadStream: function (file) {
       return fs.createReadStream(path.join(dir,file))
+    },
+    address: function (cb) {
+      cb(null, dir)
     }
   }
 }

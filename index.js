@@ -1,52 +1,16 @@
 var from = require('from2')
-var through = require('through2')
 var concat = require('concat-stream')
 var collect = require('collect-stream')
 var once = require('once')
 var path = require('path')
-var pumpify = require('pumpify')
 var overlap = require('./lib/overlap.js')
-var gunzip = require('zlib').createGunzip
-var o5mdecode = require('o5m-decode')
 var merge = require('merge-stream')
-var readonly = require('read-only-stream')
 
 module.exports = Peermaps
 
 function Peermaps (opts) {
   if (!(this instanceof Peermaps)) return new Peermaps(opts)
   this._network = opts.network
-  this._decode = opts.decode
-}
-
-Peermaps.prototype.data = function (wsen) {
-  var self = this
-  var streaming = 0, queue = []
-  var r = self.files(wsen)
-  var stream = r.pipe(through.obj(write))
-  r.on('error', function (err) { stream.emit('error', err) })
-  var stopper = through.obj()
-  var mstream = merge(stopper)
-  return readonly(mstream.pipe(self._decode.wrap(wsen)))
-
-  function write (row, enc, next) {
-    if (streaming < 4) {
-      streaming++
-      var s = pumpify.obj(
-        self._network.createReadStream(row),
-        self._decode.stream(wsen)
-      )
-      s.once('end', end)
-      mstream.add(s)
-      next()
-    } else queue.push([row,enc,next])
-  }
-  function end (err) {
-    if (err) return mstream.emit('error', err)
-    streaming--
-    if (queue.length) write.apply(null, queue.shift())
-    else if (streaming === 0) stopper.end()
-  }
 }
 
 Peermaps.prototype.files = function (wsen, cb) {
@@ -92,6 +56,10 @@ Peermaps.prototype.files = function (wsen, cb) {
       read(size, next)
     }
   }
+}
+
+Peermaps.prototype.createReadStream = function (file) {
+  return this._network.createReadStream(file)
 }
 
 function json (r, file, cb) {

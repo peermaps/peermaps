@@ -14,7 +14,9 @@ module.exports = function (dir) {
   var dbdir = path.join(dir,'db')
   var datadir = path.join(dir,'data')
   var archive = null, queue = []
+  var swarm = null, closed = false
   mkdirp(dbdir, function () {
+    if (closed) return
     var drive = hyperdrive(level(dbdir))
     archive = drive.createArchive(Buffer(link,'hex'), {
       sparse: true,
@@ -24,7 +26,7 @@ module.exports = function (dir) {
     })
     queue.forEach(function (q) { q(archive) })
     queue = []
-    var swarm = createSwarm(archive)
+    swarm = createSwarm(archive)
     swarm.on('connection', function (c) {
       //console.error('connection')
     })
@@ -60,6 +62,13 @@ module.exports = function (dir) {
         d.setReadable(r)
       })
       return d
+    },
+    address: function (cb) {
+      cb(null, link)
+    },
+    close: function (cb) {
+      if (swarm) swarm.close(cb)
+      closed = true
     }
   }
   function getArchive (f) {
