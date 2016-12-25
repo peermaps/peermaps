@@ -10,6 +10,7 @@
     "bounding-box-overlap-test": "^1.0.0",
     "collect-stream": "^1.2.1",
     "dat-js": "^4.0.1",
+    "defined": "^1.0.0",
     "duplexify": "^3.5.0",
     "fd-chunk-store": "^1.1.0",
     "from2": "^2.3.0",
