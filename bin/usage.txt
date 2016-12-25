@@ -2,35 +2,44 @@ peermaps data W,S,E,N {OPTIONS}
 
   Print all data inside the W,S,E,N extents.
 
-  -f  Output format: osm (xml), o5m, pbf, csv.
-  -s  Comma-separated list of source IDs to query.
+  -f      Output format: osm (default), o5m, pbf, csv.
+  -n      Network: ipfs (default)
+  --show  Print the generated command instead of running it.
 
 peermaps files W,S,E,N
 
-  Show the files in the archive that overlap with the W,S,E,N extents.
+  Print the files from the archive that overlap with the W,S,E,N extents.
+
+  -n      Network: ipfs (default)
+
+peermaps read FILE
+
+  Print the content of FILE from the archive.
+
+  -n      Network: ipfs (default)
+
+peermaps address
+
+  Print the address of the peermaps archive for the given network.
+
+  -n      Network: ipfs (default)
 
 peermaps generate INFILE {OPTIONS}
 
-  -o OUTDIR   Default: ./mapdata
-  -s MAXSIZE  Files must be no greater than MAXSIZE. Default: 1M
-
   Generate a peermaps archive at OUTDIR for INFILE.
 
+  -o OUTDIR   Default: ./mapdata
+  -t MAXSIZE  Files must be no greater than MAXSIZE. Default: 1M
+  --xmin      Minimum longitude (west). Default: -180
+  --xmax      Maximum longitude (east). Default: 180
+  --ymin      Minimum latitude (south). Default: -90
+  --ymin      Maximum latitude (north). Default: 90
+  --xcount    Number of longitude divisions per branch. Default: 4
+  --ycount    Number of latitude divisions per branch. Default: 4
+  --nproc     Number of converter processes to spawn. Default: (`nproc`-1)
+
   Example:
-    peermaps generate planet-latest.osm.pbf -o ~/data/planet -s 5M
+    peermaps generate planet-latest.osm.pbf -o ~/data/planet -t 5M
 
   Note: this operation may take days for planet-sized inputs.
-
-peermaps seed ARCHIVEDIR {OPTIONS}
-
-  Seed ARCHIVEDIR, an output directory created with `peermaps generate`.
-  Prints a source ID.
-
-  -n --networks  Comma-separated list of networks: ipfs, dat.
-
-peermaps sources list
-peermaps sources add ID
-peermaps sources rm ID
-
-peermaps daemon
 

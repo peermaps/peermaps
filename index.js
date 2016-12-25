@@ -4,7 +4,6 @@ var collect = require('collect-stream')
 var once = require('once')
 var path = require('path')
 var overlap = require('./lib/overlap.js')
-var merge = require('merge-stream')
 
 module.exports = Peermaps
 
