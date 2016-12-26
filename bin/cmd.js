@@ -58,11 +58,9 @@ if (argv.help || argv._[0] === 'help') {
   })
 } else if (argv._[0] === 'files') {
   var wsen = argv._.slice(1).join(',').split(',').map(Number)
-  function showFiles () {
-    peermaps.files(wsen).pipe(through.obj(function (row, enc, next) {
-      next(null, row.name + '\n')
-    })).pipe(process.stdout)
-  }
+  peermaps.files(wsen).pipe(through.obj(function (row, enc, next) {
+    next(null, row.name + '\n')
+  })).pipe(process.stdout)
 } else if (argv._[0] === 'read') {
   peermaps.createReadStream(argv._[1]).pipe(process.stdout)
 } else if (argv._[0] === 'address') {
