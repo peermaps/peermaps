@@ -15,7 +15,7 @@
     "hyperdiscovery": "^1.1.0",
     "hyperdrive": "^7.12.2",
     "ipfs-api": "^12.1.2",
-    "level": "^1.4.0",
+    "level": "^4.0.0",
     "mkdirp": "^0.5.1",
     "once": "^1.4.0",
     "ospath": "^1.2.2",
