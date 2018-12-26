@@ -33,7 +33,7 @@ peermaps generate INFILE {OPTIONS}
   --xmin      Minimum longitude (west). Default: -180
   --xmax      Maximum longitude (east). Default: 180
   --ymin      Minimum latitude (south). Default: -90
-  --ymin      Maximum latitude (north). Default: 90
+  --ymax      Maximum latitude (north). Default: 90
   --xcount    Number of longitude divisions per branch. Default: 4
   --ycount    Number of latitude divisions per branch. Default: 4
   --nproc     Number of converter processes to spawn. Default: (`nproc`-1)
