@@ -31,7 +31,7 @@ if (argv.network === 'ipfs') {
   network = require('../network/dat.js')(
     argv.dir || path.join(ospath.data(), 'peermaps/dat'))
 } else if (argv.network === 'fs') {
-  network = require('../network/fs.js')()
+  network = require('../network/fs.js')(process.cwd())
 }
 
 var peermaps = require('../')({ network: network })

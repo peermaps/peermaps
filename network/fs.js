@@ -10,6 +10,9 @@ module.exports = function (dir) {
     },
     address: function (cb) {
       cb(null, dir)
+    },
+    close: function (cb) {
+      if (cb) cb()
     }
   }
 }
