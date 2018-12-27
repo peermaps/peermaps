@@ -71,13 +71,15 @@ if (argv.help || argv._[0] === 'help') {
   })
 } else if (argv._[0] === 'generate') {
   var wsen = argv.extents ? argv.extents.split(/[ ,]/).map(Number) : []
-  mkdirp(argv.outdir, function (err) {
+  var outdir = defined(argv.outdir, './mapdata')
+
+  mkdirp(outdir, function (err) {
     if (err) return error(err)
     require('../lib/generate')({
       debug: argv.debug !== false,
       infile: argv._[1] || argv.infile,
       threshold: inbytes(argv.threshold || '1M'),
-      outdir: argv.outdir,
+      outdir: outdir,
       remove: 1,
       xmin: defined(argv.xmin, wsen[0], -180),
       xmax: defined(argv.xmax, wsen[2], 180),
